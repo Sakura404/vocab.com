@@ -8,7 +8,7 @@
           <v-spacer></v-spacer>
 
           <v-col cols="5">
-            <div class="text-right text-h4">28.238</div>
+            <div class="text-right text-h4">{{ toThousands(userpoint) }}</div>
             <div class="text-right text-caption">nameless N.</div></v-col
           ><v-col cols="2"
             ><v-icon x-large color="green">mdi-lightning-bolt</v-icon></v-col
@@ -26,6 +26,7 @@
                 <div class="se">
                   <v-icon color="green">mdi-magnify</v-icon>
                   <input
+                    v-model="lookupinput"
                     placeholder="Look Up"
                     class="tabsearch"
                     label="look up"
@@ -36,42 +37,107 @@
         </template>
       </v-toolbar>
 
-      <v-tabs-items v-model="tab">
+      <v-tabs-items touchless v-model="tab">
         <v-tab-item key="play">
           <v-card tile class="indexbg" :min-height="windowSize.y - 104" flat>
             <v-card-text>
-              <v-card>
-                <v-card-text>
-                  <h2>trophy means:</h2>
-                  <v-radio-group v-model="trophyanswer">
-                    <v-radio
-                      v-for="(n, i) in trophy"
-                      :key="i"
-                      :label="n.sentence"
-                      :value="i"
-                    ></v-radio>
-                  </v-radio-group>
-                </v-card-text>
-              </v-card>
-            </v-card-text>
+              <v-window :touchless="!nextswitch" v-model="playwin">
+                <v-window-item key="1">
+                  <v-card>
+                    <v-card-text>
+                      <h2>trophy means:</h2>
+                      <v-radio-group
+                        @change="trophycheck(trophyanswer)"
+                        v-model="trophyanswer"
+                      >
+                        <v-radio
+                          v-for="(n, i) in trophy"
+                          color="green"
+                          :key="i"
+                          :value="i"
+                          :disabled="n.havaselect"
+                          :offIcon="n.icon"
+                        >
+                          <template v-slot:label>
+                            <div :class="n.color" class="font-weight-bold">
+                              {{ n.sentence }}
+                            </div>
+                          </template></v-radio
+                        >
+                      </v-radio-group>
+                    </v-card-text>
+                  </v-card>
+                  <div class="mx-4 text-caption white--text text-right">
+                    progress: {{ trophypoints }} Points
+                  </div>
+                </v-window-item>
 
-            <v-sheet class="progress px-2 py-2"
-              ><v-row class="px-2 py-2">
-                <v-col>
-                  <v-progress-circular color="green" :rotate="270" :value="40"
-                    >40</v-progress-circular
-                  >
-                </v-col>
+                <v-window-item class="white--text" key="2"
+                  ><div style="height: 100%">
+                    <p class="px-2 text-h6 font-weight-light">
+                      A trophy is a prize given for winning acompetition. Often
+                      made of metal (orplastic meant to look like metal), a
+                      trophymay not have much monetary value, butthe pride it
+                      gives the person who receivesit can be priceless.
+                    </p>
+                    <p class="px-2 text-body-1 font-weight-light">
+                      Trophy comes from the Greek word trope, meaning "aturning,
+                      defeat of the enemy." It later came to mean "amonument of
+                      victory," which it still celebrates today.Think of the
+                      overjoyed actor who holds his Oscar -a trophy- in the air
+                      during his acceptance speech, or ateam of eight year old
+                      soccer players who, in their groupphoto, hold their
+                      trophies in one hand while raising theindex finger of
+                      their other hand, meaning "We're number one!"
+                    </p>
+                  </div>
+                </v-window-item>
+              </v-window>
+            </v-card-text>
+            <v-slide-x-reverse-transition>
+              <v-btn
+                v-if="nextswitch"
+                @click="playwinnext()"
+                style="top: 40%; right: -20px"
+                fixed
+                fab
+                ><v-icon>mdi-chevron-right</v-icon>
+              </v-btn>
+            </v-slide-x-reverse-transition>
+            <v-sheet class="progress px-1 py-1"
+              ><v-row align="center" no-gutters>
+                <v-col cols="2">
+                  <v-progress-circular
+                    size="50"
+                    color="green"
+                    :rotate="270"
+                    :value="40"
+                    >40%</v-progress-circular
+                  > </v-col
+                ><v-col class="green--text" cols="4">
+                  <div>Your progress on:</div>
+                  <div class="font-weight-light text-h5">trophy</div> </v-col
+                ><v-spacer> </v-spacer>
+                <v-col cols="1"> <v-icon x-large>mdi-magnify</v-icon></v-col>
+                <v-col class="mx-6" cols="1">
+                  <v-icon x-large>mdi-volume-source</v-icon></v-col
+                >
               </v-row></v-sheet
             >
           </v-card>
         </v-tab-item>
         <v-tab-item key="lookup">
           <v-card tile class="lookbg" :min-height="windowSize.y - 104" flat>
-          </v-card></v-tab-item
-      ></v-tabs-items>
+            <p v-if="asearch" class="pt-4 text-center white--text">
+              Try the world's smartest, fastest dictionary.<br />
+              Start typing a word and get instant results.
+            </p>
+            <v-sheet v-else> 22</v-sheet>
+          </v-card>
+        </v-tab-item></v-tabs-items
+      >
 
-      <v-navigation-drawer color="rgb(60,58,61)" width="70%" app v-model="nav">
+      <v-navigation-drawer color="rgb(60,58,61)" app v-model="nav">
         <v-card flat color="rgba(0,0,0,.0)">
           <v-card-text>
             <v-row
@@ -149,19 +215,48 @@
 export default {
   data() {
     return {
+      lookupinput: "a",
+      nextswitch: false,
       trophyanswer: null,
       lk: false,
       nav: false,
       tab: null,
+      playwin: null,
+      userpoint: 28238,
       windowSize: {
         x: 0,
         y: 0,
       },
+      trophypoints: 100,
       trophy: [
-        { sentence: "a message that makes a pledge" },
-        { sentence: "a subtle difference in meaning or opinion or attitude" },
-        { sentence: "loud and persistent outcry from many people" },
-        { sentence: "something given as a token of victory" },
+        {
+          sentence: "a message that makes a pledge",
+          answer: false,
+          havaselect: false,
+          icon: "mdi-checkbox-blank-circle-outline",
+          color: "blue--text",
+        },
+        {
+          sentence: "a subtle difference in meaning or opinion or attitude",
+          answer: false,
+          havaselect: false,
+          icon: "mdi-checkbox-blank-circle-outline",
+          color: "blue--text",
+        },
+        {
+          sentence: "loud and persistent outcry from many people",
+          answer: false,
+          havaselect: false,
+          icon: "mdi-checkbox-blank-circle-outline",
+          color: "blue--text",
+        },
+        {
+          sentence: "something given as a token of victory",
+          answer: true,
+          havaselect: false,
+          icon: "mdi-checkbox-blank-circle-outline",
+          color: "blue--text",
+        },
       ],
       items: [
         { item: "play", content: "asdf" },
@@ -171,6 +266,12 @@ export default {
     };
   },
   computed: {
+    asearch() {
+        if(this.lookupinput=='')
+        return true
+        console.log(this.lookupinput)
+      return "ambulance".indexOf(this.lookupinput) != 0;
+    },
     inputwidth() {
       return { width: document.body.clientWidth / 3 };
     },
@@ -180,6 +281,38 @@ export default {
   },
 
   methods: {
+    playwinnext() {
+      this.playwin += 1;
+    },
+    toThousands(num) {
+      return (num || 0).toString().replace(/(\d)(?=(?:\d{3})+$)/g, "$1,");
+    },
+    trophycheck(num) {
+      if (!this.trophy[num].answer) {
+        this.trophyanswer = null;
+        console.log(this.trophy[num].answer);
+        this.$set(this.trophy[num], "havaselect", true);
+        this.trophy[num].havaselect = true;
+        this.trophy[num].color = "red--text";
+        this.trophy[num].icon = "mdi-close-circle";
+        this.trophypoints =
+          this.trophypoints - 40 > 0 ? this.trophypoints - 40 : 0;
+      } else {
+        this.trophy[num].havaselect = true;
+        this.trophy[num].color = "green--text";
+        this.trophyanswer = num;
+        this.nextswitch = true;
+        this.userpoint += this.trophypoints;
+        this.trophy.forEach((element) => {
+          element.havaselect = true;
+          if (!element.answer) {
+            element.color = "red--text";
+            element.icon = "mdi-close-circle";
+          }
+        });
+        this.$forceUpdate();
+      }
+    },
     onResize() {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight };
     },
@@ -191,6 +324,7 @@ export default {
         this.lk = false;
       }
     },
+    check() {},
   },
 };
 </script>
@@ -212,8 +346,8 @@ export default {
 .indexbg {
   background: linear-gradient(
     to left bottom,
-    rgba(91, 144, 75, 0.904) 50%,
-    rgb(91, 143, 79) 50%
+    rgba(72, 114, 59, 0.904) 50%,
+    rgb(76, 119, 66) 50%
   );
 }
 .lookbg {
