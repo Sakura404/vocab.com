@@ -42,6 +42,7 @@
                 v-model="psw"
                 flat
                 solo
+                type="password"
                 :rules="pswrules"
               ></v-text-field>
               <v-btn @click="submit" block dark color="green"
@@ -83,7 +84,7 @@ export default {
       this.$router.push("/login");
     },
     login() {
-      if (this.psw == 123456 && this.user == 123456) {
+      if (this.psw == 123456 && this.user == "380487608@qq.com") {
         sessionStorage.setItem("userId", this.user);
         alert("登陆成功");
         if (this.$route.query.redirect) {
